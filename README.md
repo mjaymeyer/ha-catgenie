@@ -22,7 +22,7 @@ For each CatGenie on your account:
 | Cleaning | Binary sensor | On while a cycle is running. |
 | Problem | Binary sensor | On when the unit reports an error. |
 | Cloud connection | Binary sensor (diagnostic) | Whether the unit is online with PetNovations' cloud. |
-| Start cleaning / Stop cleaning | Buttons | Start or stop a cycle remotely. |
+| Start cleaning / Stop cleaning  / Wash Only| Buttons | Start or stop a cycle remotely. |
 | Cleaning mode | Select | Automatic (after a cat visit) or Manual. |
 | Child lock, Extra dry, Extra wash, Extra shake | Switches | The same settings as in the app. |
 | Recently Visited | Binary sensor | On for ten minutes as soon as cat leaves litterbox. |
