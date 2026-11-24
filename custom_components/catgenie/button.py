@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from catgenie import CatGenieClient
+from catgenie.const import ENDPOINT_DEVICE_OPERATION
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,6 +35,16 @@ BUTTONS: tuple[CatGenieButtonDescription, ...] = (
         key="stop_cleaning",
         translation_key="stop_cleaning",
         press_fn=lambda client, device_id: client.stop_cleaning(device_id),
+    ),
+    CatGenieButtonDescription(
+        key="wash_only",
+        name="Wash Only",
+        icon="mdi:water-sync",
+        press_fn=lambda client, device_id: client._request(
+            "POST",
+            ENDPOINT_DEVICE_OPERATION.format(device_id=device_id),
+            body={"state": 129},
+        ),
     ),
 )
 

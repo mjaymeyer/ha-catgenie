@@ -18,7 +18,11 @@ from catgenie import (
     Credentials,
     Device,
 )
-from catgenie.const import ENDPOINT_DEVICES, TLS_IMPERSONATE
+from catgenie.const import (
+    ENDPOINT_DEVICE_OPERATION,
+    ENDPOINT_DEVICES,
+    TLS_IMPERSONATE,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -63,6 +67,11 @@ def parse_device(thing: Any) -> Device | None:
     cleaned = _drop_nulls(thing)
     for key in _REQUIRED_STRINGS:
         cleaned.setdefault(key, "")
+    # Normalize wash-only (no scoop) running state (129) to RUNNING (1) so
+    # catgenie's OperationState enum does not fail validation mid-cycle.
+    op_status = cleaned.get("operationStatus")
+    if isinstance(op_status, dict) and op_status.get("state") == 129:
+        op_status["state"] = 1
     try:
         return Device.model_validate(cleaned)
     except ValidationError as err:
@@ -134,9 +143,9 @@ class CatGenieCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Store both the device and the stats payload
                 devices[device.manufacturer_id] = {
                     "device": device,
-                    "pet_stats": pet_stats
+                    "pet_stats": pet_stats,
                 }
-                
+
         if things and not devices:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -161,6 +170,13 @@ class CatGenieCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"error": str(err)},
             ) from err
         await self.async_request_refresh()
+
+    async def async_start_wash_only(self, device_id: str) -> None:
+        """Start a wash-only (no scoop) cleaning cycle."""
+        path = ENDPOINT_DEVICE_OPERATION.format(device_id=device_id)
+        await self.async_run_command(
+            lambda: self.client._request("POST", path, body={"state": 129})
+        )
 
     async def async_close(self) -> None:
         """Close the HTTP session; registered to run when the entry unloads."""
